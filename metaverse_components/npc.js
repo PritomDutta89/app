@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import metaversefile from 'metaversefile';
+import metaversefileApi from '../metaversefile-api';
 
 const localVector = new THREE.Vector3();
 
@@ -128,12 +129,28 @@ try {
       npcAvatarUrl,
     }); */
 
+    function getAppByName (apps, appName) {
+      for(var i =0;i<apps.length;i++){
+        console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
+        console.log("AppName: ", appName.toUpperCase()) // Drake - DRAKE
+        if (apps[i].name.toUpperCase().includes(appName.toUpperCase())){
+          return apps[i];
+        }else {
+          return null;
+        }
+      }
+    }
+
     const character = loreAIScene.addCharacter({
       name: npcName,
       bio: npcBio,
     });
     // console.log('got character', character);
     character.addEventListener('say', e => {
+
+      // console.log("World log: ", metaversefileApi.useWorld().getApps());
+      var apps = metaversefileApi.useWorld().getApps();
+
       console.log('got character say', e.data);
       const {message, emote, action, object, target} = e.data;
       chatManager.addPlayerMessage(npcPlayer, message);
@@ -153,14 +170,61 @@ try {
         console.log('move to object', object);
         /* target = localPlayer;
         targetType = 'follow'; */
-      } else if (action === 'moveto' || (object === 'none' && target !== 'none')) { // move to player
-        // console.log('move to', object);
+
+        let objectApp = null
+        for(var i =0;i<apps.length;i++){
+          console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
+          console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // Drake - DRAKE
+          if (apps[i].name.replace(" ", "").toUpperCase().includes(object.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
+            objectApp = apps[i];
+            break;
+          }
+        }
+
         targetSpec = {
           type: 'moveto',
-          object: localPlayer,
+          object: objectApp,
+        };
+        console.log("Target Spec: ", targetSpec);
+
+      } else if (action === 'moveto' || (object === 'none' && target !== 'none')) { // move to player
+        // console.log('move to', object);
+        let objectApp = null
+        for(var i =0;i<apps.length;i++){
+          console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
+          console.log("Object: ", target +" "+target.split("/")[1].split("#")[0].toUpperCase()) // Drake - DRAKE
+          if (apps[i].name.replace(" ", "").toUpperCase().includes(target.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
+            objectApp = apps[i];
+            break;
+          }
+        }
+
+        targetSpec = {
+          type: 'moveto',
+          // object: localPlayer,
+          object: objectApp,
         };
       } else if (['pickup', 'grab', 'take', 'get'].includes(action)) { // pick up object
         console.log('pickup', action, object, target);
+
+        //ConvAI Mods
+        let objectApp = null
+        for(var i =0;i<apps.length;i++){
+          console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
+          console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // Drake - DRAKE
+          if (apps[i].name.replace(" ", "").toUpperCase().includes(object.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
+            objectApp = apps[i];
+            break;
+          }
+        }
+        // Move near the object
+        targetSpec = {
+          type: 'grab',
+          object: objectApp,
+        };
+
+        // Grab the object
+
       } else if (['use', 'activate'].includes(action)) { // use object
         console.log('use', action, object, target);
       }
@@ -171,6 +235,7 @@ try {
     const runSpeed = walkSpeed * 8;
     const speedDistanceRate = 0.07;
     useFrame(({timestamp, timeDiff}) => {
+      // console.log("Apps: ", metaversefileApi.useWorld());
       if (npcPlayer && physics.getPhysicsEnabled()) {
         if (targetSpec) {
           const target = targetSpec.object;
@@ -178,13 +243,40 @@ try {
             .sub(npcPlayer.position);
           v.y = 0;
           const distance = v.length();
-          if (targetSpec.type === 'moveto' && distance < 2) {
-            targetSpec = null;
-          } else {
-            const speed = Math.min(Math.max(walkSpeed + ((distance - 1.5) * speedDistanceRate), 0), runSpeed);
-            v.normalize()
-              .multiplyScalar(speed * timeDiff);
-            npcPlayer.characterPhysics.applyWasd(v);
+          // if (targetSpec.type === 'moveto' && distance < 2) {
+          //   targetSpec = null;
+          // } else {
+          //   const speed = Math.min(Math.max(walkSpeed + ((distance - 1.5) * speedDistanceRate), 0), runSpeed);
+          //   v.normalize()
+          //     .multiplyScalar(speed * timeDiff);
+          //   npcPlayer.characterPhysics.applyWasd(v);
+          // }
+          switch(targetSpec.type){
+            case "moveto":
+              if (distance < 2){
+                targetSpec = null;
+              } else {
+                const speed = Math.min(Math.max(walkSpeed + ((distance - 1.5) * speedDistanceRate), 0), runSpeed);
+                v.normalize()
+                  .multiplyScalar(speed * timeDiff);
+                npcPlayer.characterPhysics.applyWasd(v);
+              }
+              break;
+
+            case "grab":
+              if(distance < 2){
+                // Directly render grab animation
+                npcPlayer.grab(targetSpec.object);
+                // Reinitialize targetSpec to null
+                targetSpec = null;
+              } else {
+                // Move near the Object
+                const speed = Math.min(Math.max(walkSpeed + ((distance - 1.5) * speedDistanceRate), 0), runSpeed);
+                v.normalize()
+                  .multiplyScalar(speed * timeDiff);
+                npcPlayer.characterPhysics.applyWasd(v);
+              }
+              break;
           }
         }
 
