@@ -10,7 +10,7 @@ import {
   parseCommentResponse,
   postProcessResponse,
   parseLoreResponses,
-} from './lore-model.js'
+} from './convai-lore-model.js'
 
 const numGenerateTries = 5;
 const temperature = 1;
