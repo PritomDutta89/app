@@ -131,8 +131,8 @@ try {
 
     function getAppByName (apps, appName) {
       for(var i =0;i<apps.length;i++){
-        console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
-        console.log("AppName: ", appName.toUpperCase()) // Drake - DRAKE
+        // console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
+        // console.log("AppName: ", appName.toUpperCase()) // Drake - DRAKE
         if (apps[i].name.toUpperCase().includes(appName.toUpperCase())){
           return apps[i];
         }else {
@@ -146,6 +146,10 @@ try {
       bio: npcBio,
     });
     // console.log('got character', character);
+
+    // ----------------------------------------- ConvAI Mods --------------------------------------------------------------------
+    // Re implemented the action code to the best of our understanding. Need mre clarification on the implementation
+
     character.addEventListener('say', e => {
 
       // console.log("World log: ", metaversefileApi.useWorld().getApps());
@@ -158,23 +162,51 @@ try {
         const newSssAction = {
           type: 'sss',
         };
-        npcPlayer.addAction(newSssAction);  
-      } else if (action === 'follow' || (object === 'none' && target === localPlayer.name)) { // follow player
+        npcPlayer.addAction(newSssAction);
+      }
+
+      // This else-if section is hardcoded for testing
+      // else if(action === 'none'){
+      //   let objectApp = null
+      //   for(var i =0;i<apps.length;i++){
+      //     // console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
+      //     // console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // Drake - DRAKE
+      //     if (apps[i].name.replace(" ", "").toUpperCase().includes("sword".replace(" ", "").toUpperCase())){
+      //       objectApp = apps[i];
+      //       break;
+      //     }
+      //   }
+
+      //   targetSpec = {
+      //     type: 'grab',
+      //     object: objectApp,
+      //   };
+      // }
+
+      // Assuming we always follow the localPlayer for now
+      else if (action === 'follow' || (object === 'none' && target === localPlayer.name)) { // follow player
         targetSpec = {
           type: 'follow',
           object: localPlayer,
         };
-      } else if (action === 'stop') { // stop
+      }
+
+      else if (action === 'stop') { // stop
         targetSpec = null;
-      } else if (action === 'moveto' || (object !== 'none' && target === 'none')) { // move to object
+      } 
+      
+      // Moveto either an object or a target
+      else if (action === 'moveto' && (object !== 'none' && target === 'none')) { // move to object
         console.log('move to object', object);
         /* target = localPlayer;
         targetType = 'follow'; */
 
         let objectApp = null
         for(var i =0;i<apps.length;i++){
-          console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
-          console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // Drake - DRAKE
+
+          // Shortcut for easier access to app
+          // console.log("Apps-i: ", apps[i].name.toUpperCase()) // [drake_hacker_v1_vian - DRAKE_HACKER_V1_VIAN ]
+          // console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // [Drake - DRAKE         ]
           if (apps[i].name.replace(" ", "").toUpperCase().includes(object.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
             objectApp = apps[i];
             break;
@@ -185,14 +217,11 @@ try {
           type: 'moveto',
           object: objectApp,
         };
-        console.log("Target Spec: ", targetSpec);
 
-      } else if (action === 'moveto' || (object === 'none' && target !== 'none')) { // move to player
+      } else if (action === 'moveto' && (object === 'none' && target !== 'none')) { // move to player
         // console.log('move to', object);
         let objectApp = null
         for(var i =0;i<apps.length;i++){
-          console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
-          console.log("Object: ", target +" "+target.split("/")[1].split("#")[0].toUpperCase()) // Drake - DRAKE
           if (apps[i].name.replace(" ", "").toUpperCase().includes(target.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
             objectApp = apps[i];
             break;
@@ -204,31 +233,53 @@ try {
           // object: localPlayer,
           object: objectApp,
         };
-      } else if (['pickup', 'grab', 'take', 'get'].includes(action)) { // pick up object
-        console.log('pickup', action, object, target);
+      } 
+      
+      // NPC can pickup an object / target [Ambiguously defined]
+      else if (['pickup', 'grab', 'take', 'get'].includes(action)) { // pick up object
+        // console.log('pickup', action, object, target);
 
-        //ConvAI Mods
+        finalTarget = object === 'none' ? target : object;
         let objectApp = null
         for(var i =0;i<apps.length;i++){
-          console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
-          console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // Drake - DRAKE
-          if (apps[i].name.replace(" ", "").toUpperCase().includes(object.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
+          if (apps[i].name.replace(" ", "").toUpperCase().includes(finalTarget.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
             objectApp = apps[i];
             break;
           }
         }
-        // Move near the object
+
         targetSpec = {
           type: 'grab',
           object: objectApp,
         };
+      }
 
-        // Grab the object
+      // NPC can drop an object / target [Ambiguously defined]
+      else if (['drop', 'drops'].includes(action)) { // pick up object
+        // console.log('pickup', action, object, target);
 
-      } else if (['use', 'activate'].includes(action)) { // use object
+        finalTarget = object === 'none' ? target : object;
+        let objectApp = null
+        for(var i =0;i<apps.length;i++){
+          if (apps[i].name.replace(" ", "").toUpperCase().includes(finalTarget.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
+            objectApp = apps[i];
+            break;
+          }
+        }
+
+        targetSpec = {
+          type: 'drop',
+          object: objectApp,
+        };
+      }
+
+      // yet to be implementated
+      else if (['use', 'activate'].includes(action)) { // use object
         console.log('use', action, object, target);
       }
     });
+
+    // ------------------------------------------------------------------------------------------------------------------------------------------
 
     const slowdownFactor = 0.4;
     const walkSpeed = 0.075 * slowdownFactor;
@@ -251,6 +302,10 @@ try {
           //     .multiplyScalar(speed * timeDiff);
           //   npcPlayer.characterPhysics.applyWasd(v);
           // }
+
+          // ------------------------------------------ ConvAI Mods ------------------------------------------------
+          // Implemented with switch case to handle more actions
+
           switch(targetSpec.type){
             case "moveto":
               if (distance < 2){
@@ -264,21 +319,31 @@ try {
               break;
 
             case "grab":
-              if(distance < 2){
+
+              // Distance is adjusted wrt maxGrabDistance
+              if(distance < 1.5){
                 // Directly render grab animation
-                npcPlayer.grab(targetSpec.object);
+                npcPlayer.wear(targetSpec.object);
+                // Note: The app does not appear with the NPC yet
+
                 // Reinitialize targetSpec to null
                 targetSpec = null;
               } else {
                 // Move near the Object
-                const speed = Math.min(Math.max(walkSpeed + ((distance - 1.5) * speedDistanceRate), 0), runSpeed);
+                const speed = Math.min(Math.max(walkSpeed + ((distance - 1) * speedDistanceRate), 0), runSpeed);
                 v.normalize()
                   .multiplyScalar(speed * timeDiff);
                 npcPlayer.characterPhysics.applyWasd(v);
               }
               break;
+
+            case "drop":
+              npcPlayer.unwear(targetSpec.object);
+              break;
           }
         }
+
+        // -----------------------------------------------------------------------------------------------------------
 
         npcPlayer.eyeballTarget.copy(localPlayer.position);
         npcPlayer.eyeballTargetEnabled = true;

@@ -297,7 +297,21 @@ class PlayerBase extends THREE.Object3D {
         const actions = this.getActionsState();
         let oldLoadoutAction = null;
         for (let i = 0; i < actions.length; i++) {
-          const action = actions.get(i);
+
+          //--------------------------------ConvAI Mods-------------------------------
+          
+          // const action = actions.get(i);
+
+          //The above action was throwing actions.get is not a function error for NPCs
+          var action = null;
+          try{
+            action = actions.get(i);
+          }catch(err){
+            action = actions[i]
+          }
+
+          //---------------------------------------------------------------------------
+
           if (action.type === 'wear' && action.loadoutIndex === loadoutIndex) {
             oldLoadoutAction = action;
             break;
@@ -1010,6 +1024,7 @@ class LocalPlayer extends UninterpolatedPlayer {
   grab(app, hand = 'left') {
     const renderer = getRenderer();
     const localPlayer = metaversefile.useLocalPlayer();
+
     const {position, quaternion} = renderer.xr.getSession() ?
       localPlayer[hand === 'left' ? 'leftHand' : 'rightHand']
     :
@@ -1347,6 +1362,7 @@ class NpcPlayer extends StaticUninterpolatedPlayer {
     super.destroy();
   }
   updateInterpolation = UninterpolatedPlayer.prototype.updateInterpolation;
+
 }
 
 export {

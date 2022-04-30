@@ -533,8 +533,39 @@ class AppManager extends EventTarget {
     // srcAppManager.setBlindStateMode(true);
     // dstAppManager.setBlindStateMode(true);
     
-    if (srcAppManager.appsArray.doc === dstAppManager.appsArray.doc) {
-      this.unbindTrackedApp(instanceId);
+    // if (srcAppManager.appsArray.doc === dstAppManager.appsArray.doc) {
+      // this.unbindTrackedApp(instanceId);
+      
+      // let dstTrackedApp = null;
+      // srcAppManager.appsArray.doc.transact(() => {
+      //   const srcTrackedApp = srcAppManager.getTrackedApp(instanceId);
+      //   const contentId = srcTrackedApp.get('contentId');
+      //   const position = srcTrackedApp.get('position');
+      //   const quaternion = srcTrackedApp.get('quaternion');
+      //   const scale = srcTrackedApp.get('scale');
+      //   const components = srcTrackedApp.get('components');
+        
+      //   srcAppManager.removeTrackedAppInternal(instanceId);
+        
+      //   dstTrackedApp = dstAppManager.addTrackedAppInternal(
+      //     instanceId,
+      //     contentId,
+      //     position,
+      //     quaternion,
+      //     scale,
+      //     components,
+      //   );
+      // });
+      
+      // dstAppManager.bindTrackedApp(dstTrackedApp, app);
+    // } else {
+    //   throw new Error('cannot transplant apps between app manager with different state binding');
+    // }
+
+    //--------------------------------- ConvAI Mods-------------------------------------------------
+    // Commenting the above sectionb of code to preform cross app-manager app transplant
+
+    this.unbindTrackedApp(instanceId);
       
       let dstTrackedApp = null;
       srcAppManager.appsArray.doc.transact(() => {
@@ -558,9 +589,8 @@ class AppManager extends EventTarget {
       });
       
       dstAppManager.bindTrackedApp(dstTrackedApp, app);
-    } else {
-      throw new Error('cannot transplant apps between app manager with different state binding');
-    }
+
+      // --------------------------------------------------------------------------------------------
     
     // srcAppManager.setBlindStateMode(false);
     // dstAppManager.setBlindStateMode(false);
