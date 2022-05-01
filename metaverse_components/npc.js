@@ -30,6 +30,12 @@ try {
       npcWear = [npcWear];
     }
 
+    // ------------------------------------------- ConvAI Mods --------------------------------------------
+    // Hold the list of attach you are picking up
+    let npcApps = []
+
+    // ----------------------------------------------------------------------------------------------------
+
     let live = true;
     let vrmApp = app;
     let npcPlayer = null;
@@ -166,22 +172,22 @@ try {
       }
 
       // This else-if section is hardcoded for testing
-      // else if(action === 'none'){
-      //   let objectApp = null
-      //   for(var i =0;i<apps.length;i++){
-      //     // console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
-      //     // console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // Drake - DRAKE
-      //     if (apps[i].name.replace(" ", "").toUpperCase().includes("sword".replace(" ", "").toUpperCase())){
-      //       objectApp = apps[i];
-      //       break;
-      //     }
-      //   }
+      else if(action === 'none'){
+        let objectApp = null
+        for(var i =0;i<apps.length;i++){
+          // console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
+          // console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // Drake - DRAKE
+          if (apps[i].name.replace(" ", "").toUpperCase().includes("pistol".replace(" ", "").toUpperCase())){
+            objectApp = apps[i];
+            break;
+          }
+        }
 
-      //   targetSpec = {
-      //     type: 'grab',
-      //     object: objectApp,
-      //   };
-      // }
+        targetSpec = {
+          type: 'grab',
+          object: objectApp,
+        };
+      }
 
       // Assuming we always follow the localPlayer for now
       else if (action === 'follow' || (object === 'none' && target === localPlayer.name)) { // follow player
@@ -239,11 +245,13 @@ try {
       else if (['pickup', 'grab', 'take', 'get'].includes(action)) { // pick up object
         // console.log('pickup', action, object, target);
 
-        finalTarget = object === 'none' ? target : object;
+        let finalTarget = object === 'none' ? target : object;
         let objectApp = null
         for(var i =0;i<apps.length;i++){
           if (apps[i].name.replace(" ", "").toUpperCase().includes(finalTarget.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
             objectApp = apps[i];
+            // Adding that to the lsit of apps related to the npc
+            npcApps.push(apps[i]);
             break;
           }
         }
@@ -257,12 +265,12 @@ try {
       // NPC can drop an object / target [Ambiguously defined]
       else if (['drop', 'drops'].includes(action)) { // pick up object
         // console.log('pickup', action, object, target);
-
-        finalTarget = object === 'none' ? target : object;
+        let finalTarget = object === 'none' ? target : object;
         let objectApp = null
-        for(var i =0;i<apps.length;i++){
-          if (apps[i].name.replace(" ", "").toUpperCase().includes(finalTarget.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
-            objectApp = apps[i];
+        for(var i =0;i<npcApps.length;i++){
+          if (npcApps[i].name.replace(" ", "").toUpperCase().includes("pistol".replace(" ", "").toUpperCase())){
+            objectApp = npcApps[i];
+            console.log("ObjectApp: ", objectApp);
             break;
           }
         }
@@ -307,6 +315,16 @@ try {
           // Implemented with switch case to handle more actions
 
           switch(targetSpec.type){
+
+            case "follow":
+              if (distance > 2){
+                const speed = Math.min(Math.max(walkSpeed + ((distance - 1.5) * speedDistanceRate), 0), runSpeed);
+                v.normalize()
+                  .multiplyScalar(speed * timeDiff);
+                npcPlayer.characterPhysics.applyWasd(v);
+              }
+              break;
+
             case "moveto":
               if (distance < 2){
                 targetSpec = null;
@@ -325,6 +343,8 @@ try {
                 // Directly render grab animation
                 npcPlayer.wear(targetSpec.object);
                 // Note: The app does not appear with the NPC yet
+                // Add the app to list of apps for NPC
+                npcApps.push(targetSpec.object)
 
                 // Reinitialize targetSpec to null
                 targetSpec = null;

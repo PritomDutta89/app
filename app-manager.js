@@ -143,16 +143,16 @@ class AppManager extends EventTarget {
           
           // console.log('detected remove app 2', instanceId, appManagers.length);
           
-          if (!migrated) {
-            // console.log('detected remove app 3', instanceId, appManagers.length);
+          // if (!migrated) {
+          //   // console.log('detected remove app 3', instanceId, appManagers.length);
             
-            this.dispatchEvent(new MessageEvent('trackedappremove', {
-              data: {
-                instanceId,
-                app,
-              },
-            }));
-          }
+          //   this.dispatchEvent(new MessageEvent('trackedappremove', {
+          //     data: {
+          //       instanceId,
+          //       app,
+          //     },
+          //   }));
+          // }
         }
       };
       nextAppsArray.observe(observe);
@@ -205,9 +205,20 @@ class AppManager extends EventTarget {
   bindEvents() {
     this.addEventListener('trackedappadd', async e => {
       const {trackedApp} = e.data;
+      console.log("Tracked App Data ", trackedApp.binding.instanceId);
       const trackedAppJson = trackedApp.toJSON();
-      const {instanceId, contentId, position, quaternion, scale, components: componentsString} = trackedAppJson;
-      const components = JSON.parse(componentsString);
+      
+      // const {instanceId, contentId, position, quaternion, scale, components: componentsString} = trackedAppJson;
+      const instanceId = trackedApp.binding.instanceId;
+      const contentId = trackedApp.binding.contentId;
+      const position = trackedApp.binding.position;
+      const quaternion = trackedApp.binding.quaternion;
+      const scale = trackedApp.binding.scale;
+      const componentsString = trackedApp.binding.components;
+
+      const components = JSON.parse((componentsString === undefined ? "[]" : componentsString));
+
+      console.log("Position: ", position)
       
       const p = makePromise();
       p.instanceId = instanceId;
@@ -526,7 +537,8 @@ class AppManager extends EventTarget {
   /* setBlindStateMode(stateBlindMode) {
     this.stateBlindMode = stateBlindMode;
   } */
-  transplantApp(app, dstAppManager) {
+  // transplantApp(app, dstAppManager) {
+  transplantApp(app, dstPlayer) {
     const {instanceId} = app;
     const srcAppManager = this;
     
@@ -565,11 +577,13 @@ class AppManager extends EventTarget {
     //--------------------------------- ConvAI Mods-------------------------------------------------
     // Commenting the above sectionb of code to preform cross app-manager app transplant
 
-    this.unbindTrackedApp(instanceId);
-      
+      this.unbindTrackedApp(instanceId);
+      // console.log("Src App Manger State binding: ", srcAppManager.appsArray.doc);
+      // console.log("Src App Manger State binding: ", dstAppManager.appsArray.doc);
       let dstTrackedApp = null;
       srcAppManager.appsArray.doc.transact(() => {
         const srcTrackedApp = srcAppManager.getTrackedApp(instanceId);
+        // console.log("srcTrackedApp: ", srcTrackedApp);
         const contentId = srcTrackedApp.get('contentId');
         const position = srcTrackedApp.get('position');
         const quaternion = srcTrackedApp.get('quaternion');
@@ -577,8 +591,8 @@ class AppManager extends EventTarget {
         const components = srcTrackedApp.get('components');
         
         srcAppManager.removeTrackedAppInternal(instanceId);
-        
-        dstTrackedApp = dstAppManager.addTrackedAppInternal(
+        // console.log("Destination Player 1", dstPlayer);
+        dstTrackedApp = dstPlayer.appManager.addTrackedAppInternal(
           instanceId,
           contentId,
           position,
@@ -586,9 +600,10 @@ class AppManager extends EventTarget {
           scale,
           components,
         );
+        console.log("Destination Player 2", dstPlayer);
       });
       
-      dstAppManager.bindTrackedApp(dstTrackedApp, app);
+      // dstPlayer.appManager.bindTrackedApp(dstTrackedApp, app);
 
       // --------------------------------------------------------------------------------------------
     

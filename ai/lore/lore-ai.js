@@ -214,6 +214,7 @@ class AIScene {
 class LoreAI {
   constructor() {
     this.endpointFn = null;
+    this.url = null;
   }
   async generate(prompt, {
     stop,
@@ -248,6 +249,29 @@ class LoreAI {
       reject(new Error('prompt is required'));
     }
   }
+
+  async generateConvAI(
+    prompt,
+  ) {
+    if (prompt) {
+      const query = new FormData();
+      query.append("webaversePrompt", prompt);
+      // query.api_key = this.api_key;
+      // query.charID = charID;
+      // query.sessionID = "-1";
+      // query.voice = "FEMALE"; // ""
+      console.log("Query created...", query);
+
+      const result = await this.endpoint(query);
+
+      const { response } = result;
+      return response;
+
+    } else {
+      reject(new Error("prompt is required"));
+    }
+  }
+  
   async endpoint(query) {
     if (this.endpointFn) {
       return await this.endpointFn(query);
@@ -277,7 +301,7 @@ class LoreAI {
       };
       this.setEndpoint(endpointFn);
     } else {
-      this.setEndpoint(null);
+        this.setEndpoint(null);
     }
   }
   createScene(localPlayer) {
@@ -289,6 +313,7 @@ class LoreAI {
           // temperature,
           // top_p,
         });
+        // return this.generateConvAI(prompt);
       },
     });
   }

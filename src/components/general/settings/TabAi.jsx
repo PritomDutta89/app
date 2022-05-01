@@ -11,7 +11,7 @@ import styles from './settings.module.css';
 
 //
 
-const ApiTypes = [ 'NONE', 'AI21', 'GOOSEAI', 'OPENAI' ];
+const ApiTypes = ['NONE', 'AI21', 'GOOSEAI', 'OPENAI', 'CONVAI'];
 const DefaultSettings = {
     apiType: ApiTypes[0],
     apiKey: '',
@@ -20,16 +20,16 @@ const authenticatedApiName = 'ai';
 
 export const TabAi = ({ active }) => {
 
-    const [ appyingChanges, setAppyingChanges ] = useState( false );
-    const [ changesNotSaved, setChangesNotSaved ] = useState( false );
-    const [ settingsLoaded, setSettingsLoaded ] = useState( false );
-    const [ debugEnabled, setDebugEnabled ] = useState( debug.enabled );
-    const [ testText, setTestText ] = useState( '' );
+    const [appyingChanges, setAppyingChanges] = useState(false);
+    const [changesNotSaved, setChangesNotSaved] = useState(false);
+    const [settingsLoaded, setSettingsLoaded] = useState(false);
+    const [debugEnabled, setDebugEnabled] = useState(debug.enabled);
+    const [testText, setTestText] = useState('');
 
-    const [ apiType, setApiType ] = useState( null );
-    const [ apiKey, setApiKey ] = useState( null );
-    const [ apiKeyEnabled, setApiKeyEnabled ] = useState( false );
-    const [ testRunning, setTestRunning ] = useState( false );
+    const [apiType, setApiType] = useState(null);
+    const [apiKey, setApiKey] = useState(null);
+    const [apiKeyEnabled, setApiKeyEnabled] = useState(false);
+    const [testRunning, setTestRunning] = useState(false);
 
     //
 
@@ -49,7 +49,7 @@ export const TabAi = ({ active }) => {
             const hasApiKey = await preauthenticator.hasAuthenticatedApi(authenticatedApiName);
             // console.log('has api key', hasApiKey);
             if (!live) return;
-            setApiKeyEnabled( hasApiKey );
+            setApiKeyEnabled(hasApiKey);
         })();
         return () => {
             live = false;
@@ -64,10 +64,11 @@ export const TabAi = ({ active }) => {
             case 'AI21': return `https://ai.webaverse.com/ai21/v1/engines/j1-large/completions`;
             case 'GOOSEAI': return `https://ai.webaverse.com/gooseai/v1/engines/gpt-neo-20b/completions`;
             case 'OPENAI': return `https://api.openai.com/v1/engines/text-davinci-002/completions`;
+            // case 'CONVAI': return `http://34.125.48.172:8080/getWebaverseResponse`
             default: return null;
         }
     };
-    const _apiTypeNeedsApiKey = apiType => apiType === 'OPENAI';
+    const _apiTypeNeedsApiKey = apiType => apiType === 'OPENAI'; //|| apiType === 'CONVAI';
 
     function updateLoreEndpoint(apiType) {
         const url = _getApiUrl(apiType);
@@ -82,11 +83,11 @@ export const TabAi = ({ active }) => {
         }
     };
 
-    async function saveSettings () {
+    async function saveSettings() {
 
         const settings = {
-            apiType:        apiType,
-            apiKey:         '',
+            apiType: apiType,
+            apiKey: '',
         };
 
         if (_apiTypeNeedsApiKey(apiType) && apiKeyEnabled && !apiKey) {
@@ -95,7 +96,7 @@ export const TabAi = ({ active }) => {
             if (_apiTypeNeedsApiKey(apiType) && apiKey) {
                 const url = _getApiUrl(apiType);
                 const origin = new URL(url).origin;
-                
+
                 (async () => {
                     await preauthenticator.setAuthenticatedApi(authenticatedApiName, origin, `Bearer ${apiKey}`);
                     setApiKeyEnabled(true);
@@ -112,23 +113,23 @@ export const TabAi = ({ active }) => {
             }
         }
 
-        localStorage.setItem( 'AiSettings', JSON.stringify( settings ) );
+        localStorage.setItem('AiSettings', JSON.stringify(settings));
 
         updateLoreEndpoint(apiType);
 
     };
 
-    async function loadSettings () {
+    async function loadSettings() {
 
         // load local storage
-        const settingsString = localStorage.getItem( 'AiSettings' );
+        const settingsString = localStorage.getItem('AiSettings');
         let settings;
 
         try {
 
-            settings = JSON.parse( settingsString );
+            settings = JSON.parse(settingsString);
 
-        } catch ( err ) {
+        } catch (err) {
 
             settings = DefaultSettings;
 
@@ -141,63 +142,63 @@ export const TabAi = ({ active }) => {
         updateLoreEndpoint(apiType);
 
         // set react state
-        setApiType( apiType );
-        setApiKey( '' );
+        setApiType(apiType);
+        setApiKey('');
 
         // console.log('set api', settings.apiType ?? DefaultSettings.apiType, keyString ?? DefaultSettings.apiKey);
 
-        setSettingsLoaded( true );
+        setSettingsLoaded(true);
 
     };
 
-    function applySettings () {
+    function applySettings() {
 
         saveSettings();
-        setApiKey( '' );
+        setApiKey('');
 
-        setChangesNotSaved( false );
+        setChangesNotSaved(false);
 
-        setTimeout( () => { setAppyingChanges( false ) }, 1000 );
+        setTimeout(() => { setAppyingChanges(false) }, 1000);
 
     };
 
-    function handleApplySettingsBtnClick ( event ) {
+    function handleApplySettingsBtnClick(event) {
 
         event.stopPropagation();
 
-        setAppyingChanges( true );
+        setAppyingChanges(true);
 
-        setTimeout( applySettings, 100 );
+        setTimeout(applySettings, 100);
         applySettings();
 
     };
 
     //
 
-    useEffect( () => {
+    useEffect(() => {
 
-        if ( apiType !== null && apiKey !== null ) {
+        if (apiType !== null && apiKey !== null) {
 
-            if ( settingsLoaded ) {
+            if (settingsLoaded) {
 
-                setChangesNotSaved( true );
+                setChangesNotSaved(true);
 
             } else {
 
-                setSettingsLoaded( true );
+                setSettingsLoaded(true);
                 applySettings();
 
             }
 
         }
 
-    }, [ apiType, apiKey ] );
+    }, [apiType, apiKey]);
 
-    useEffect( () => {
+    useEffect(() => {
 
         loadSettings();
 
-    }, [] );
+    }, []);
 
     async function testAi(e) {
         setTestRunning(true);
@@ -214,42 +215,42 @@ export const TabAi = ({ active }) => {
     //
 
     return (
-        <div className={ classNames( styles.apiKeysTab, styles.tabContent, active ? styles.active : null ) }>
-            <div className={ styles.blockTitle }>MODEL</div>
-            <div className={ styles.row }>
-                <div className={ styles.paramName }>Provider</div>
-                <Switch className={ styles.switch } value={ apiType } setValue={ setApiType } values={ ApiTypes } />
+        <div className={classNames(styles.apiKeysTab, styles.tabContent, active ? styles.active : null)}>
+            <div className={styles.blockTitle}>MODEL</div>
+            <div className={styles.row}>
+                <div className={styles.paramName}>Provider</div>
+                <Switch className={styles.switch} value={apiType} setValue={setApiType} values={ApiTypes} />
                 {_apiTypeNeedsApiKey(apiType) ?
                     <input
                         type="text"
-                        className={ classNames(styles.input, apiKeyEnabled ? styles.enabled : null) }
-                        value={ apiKey ?? '' }
-                        onChange={e => setApiKey(e.target.value) }
+                        className={classNames(styles.input, apiKeyEnabled ? styles.enabled : null)}
+                        value={apiKey ?? ''}
+                        onChange={e => setApiKey(e.target.value)}
                         placeholder={`API Key${apiKeyEnabled ? ' (set)' : ''}`}
                     />
-                :
-                  null}
-                <div className={ styles.clearfix } />                
+                    :
+                    null}
+                <div className={styles.clearfix} />
             </div>
 
             {debugEnabled ? (<>
-                <div className={ styles.blockTitle }>Test</div>
-                <div className={ styles.row }>
-                
+                <div className={styles.blockTitle}>Test</div>
+                <div className={styles.row}>
+
                     <textarea
-                        className={ styles.textarea }
+                        className={styles.textarea}
                         value={testText}
                         onChange={e => {
                             setTestText(e.target.value);
                         }}
                     ></textarea>
-                    <div className={ styles.clearfix } />
-                    <input type="button" className={ styles.button } value={ testRunning ? 'Working...' : 'Submit' } disabled={testRunning} onClick={testAi} />
+                    <div className={styles.clearfix} />
+                    <input type="button" className={styles.button} value={testRunning ? 'Working...' : 'Submit'} disabled={testRunning} onClick={testAi} />
                 </div>
             </>) : null}
 
-            <div className={ classNames( styles.applyBtn, changesNotSaved ? styles.active : null ) } onClick={ handleApplySettingsBtnClick } >
-                { appyingChanges ? 'APPLYING' : 'APPLY' }
+            <div className={classNames(styles.applyBtn, changesNotSaved ? styles.active : null)} onClick={handleApplySettingsBtnClick} >
+                {appyingChanges ? 'APPLYING' : 'APPLY'}
             </div>
         </div>
     );

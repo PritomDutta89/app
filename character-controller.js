@@ -328,7 +328,8 @@ class PlayerBase extends THREE.Object3D {
 
       const _transplantNewApp = () => {
         if (world.appManager.hasTrackedApp(app.instanceId)) {
-          world.appManager.transplantApp(app, this.appManager);
+          // world.appManager.transplantApp(app, this.appManager);
+          world.appManager.transplantApp(app, this);
         } else {
           // console.warn('need to transplant unowned app', app, world.appManager, this.appManager);
           // debugger;
@@ -374,7 +375,19 @@ class PlayerBase extends THREE.Object3D {
       return type === 'wear' && instanceId === app.instanceId;
     });
     if (wearActionIndex !== -1) {
-      const wearAction = this.getActionsState().get(wearActionIndex);
+      
+      // ------------------------------------------ ConvAI Mods ------------------------------------------------
+      // const wearAction = this.getActionsState().get(wearActionIndex);
+      // Commented out the above code as it was throwing .get is not a function
+
+      var wearAction = null;
+      try{
+        wearAction = this.getActionsState().get(wearActionIndex);
+      }catch(err){
+        wearAction = this.getActionsState()[wearActionIndex]
+      }
+
+      // -------------------------------------------------------------------------------------------------------
       const loadoutIndex = wearAction.loadoutIndex;
 
       const _setAppTransform = () => {
