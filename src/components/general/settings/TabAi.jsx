@@ -64,11 +64,11 @@ export const TabAi = ({ active }) => {
             case 'AI21': return `https://ai.webaverse.com/ai21/v1/engines/j1-large/completions`;
             case 'GOOSEAI': return `https://ai.webaverse.com/gooseai/v1/engines/gpt-neo-20b/completions`;
             case 'OPENAI': return `https://api.openai.com/v1/engines/text-davinci-002/completions`;
-            // case 'CONVAI': return `http://34.125.48.172:8080/getWebaverseResponse`
+            case 'CONVAI': return `https://test.convai.com/getWebaverseResponse`
             default: return null;
         }
     };
-    const _apiTypeNeedsApiKey = apiType => apiType === 'OPENAI'; //|| apiType === 'CONVAI';
+    const _apiTypeNeedsApiKey = apiType => apiType === 'OPENAI' || apiType === 'CONVAI';
 
     function updateLoreEndpoint(apiType) {
         const url = _getApiUrl(apiType);

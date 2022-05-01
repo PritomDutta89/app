@@ -172,22 +172,22 @@ try {
       }
 
       // This else-if section is hardcoded for testing
-      else if(action === 'none'){
-        let objectApp = null
-        for(var i =0;i<apps.length;i++){
-          // console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
-          // console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // Drake - DRAKE
-          if (apps[i].name.replace(" ", "").toUpperCase().includes("pistol".replace(" ", "").toUpperCase())){
-            objectApp = apps[i];
-            break;
-          }
-        }
+      // else if(action === 'none'){
+      //   let objectApp = null
+      //   for(var i =0;i<apps.length;i++){
+      //     // console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
+      //     // console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // Drake - DRAKE
+      //     if (apps[i].name.replace(" ", "").toUpperCase().includes("pistol".replace(" ", "").toUpperCase())){
+      //       objectApp = apps[i];
+      //       break;
+      //     }
+      //   }
 
-        targetSpec = {
-          type: 'grab',
-          object: objectApp,
-        };
-      }
+      //   targetSpec = {
+      //     type: 'grab',
+      //     object: objectApp,
+      //   };
+      // }
 
       // Assuming we always follow the localPlayer for now
       else if (action === 'follow' || (object === 'none' && target === localPlayer.name)) { // follow player
@@ -268,7 +268,7 @@ try {
         let finalTarget = object === 'none' ? target : object;
         let objectApp = null
         for(var i =0;i<npcApps.length;i++){
-          if (npcApps[i].name.replace(" ", "").toUpperCase().includes("pistol".replace(" ", "").toUpperCase())){
+          if (npcApps[i].name.replace(" ", "").toUpperCase().includes(finalTarget.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
             objectApp = npcApps[i];
             console.log("ObjectApp: ", objectApp);
             break;

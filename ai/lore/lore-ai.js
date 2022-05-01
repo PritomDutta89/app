@@ -254,15 +254,15 @@ class LoreAI {
     prompt,
   ) {
     if (prompt) {
-      const query = new FormData();
-      query.append("webaversePrompt", prompt);
+      const query = {};
+      query["webaversePrompt"] = prompt;
       // query.api_key = this.api_key;
       // query.charID = charID;
       // query.sessionID = "-1";
       // query.voice = "FEMALE"; // ""
-      console.log("Query created...", query);
-
+      
       const result = await this.endpoint(query);
+      console.log("Result ConvAI...", result);
 
       const { response } = result;
       return response;
@@ -291,8 +291,10 @@ class LoreAI {
       const endpointFn = async query => {
         const res = await fetch(url, {
           method: 'POST',
+          mode: 'no-cors',
           headers: {
             'Content-Type': 'application/json',
+            // 'Access-Control-Allow-Origin': '*',
           },
           body: JSON.stringify(query),
         });
@@ -308,12 +310,12 @@ class LoreAI {
     return new AIScene({
       localPlayer,
       generateFn: (prompt, stop) => {
-        return this.generate(prompt, {
-          stop,
-          // temperature,
-          // top_p,
-        });
-        // return this.generateConvAI(prompt);
+        // return this.generate(prompt, {
+        //   stop,
+        //   // temperature,
+        //   // top_p,
+        // });
+        return this.generateConvAI(prompt);
       },
     });
   }
