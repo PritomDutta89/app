@@ -190,7 +190,7 @@ try {
       // }
 
       // Assuming we always follow the localPlayer for now
-      else if (action === 'follow' || (object === 'none' && target === localPlayer.name)) { // follow player
+      else if ((action === 'follow' || action === 'follows') || (object === 'none' && target === localPlayer.name)) { // follow player
         targetSpec = {
           type: 'follow',
           object: localPlayer,
@@ -202,7 +202,7 @@ try {
       } 
       
       // Moveto either an object or a target
-      else if (action === 'moveto' && (object !== 'none' && target === 'none')) { // move to object
+      else if ((action === 'moveto' || action === 'movesto') && (object !== 'none' && target === 'none')) { // move to object
         console.log('move to object', object);
         /* target = localPlayer;
         targetType = 'follow'; */
@@ -224,7 +224,7 @@ try {
           object: objectApp,
         };
 
-      } else if (action === 'moveto' && (object === 'none' && target !== 'none')) { // move to player
+      } else if ((action === 'moveto' || action === 'movesto') && (object === 'none' && target !== 'none')) { // move to player
         // console.log('move to', object);
         let objectApp = null
         for(var i =0;i<apps.length;i++){
@@ -242,7 +242,7 @@ try {
       } 
       
       // NPC can pickup an object / target [Ambiguously defined]
-      else if (['pickup', 'grab', 'take', 'get'].includes(action)) { // pick up object
+      else if (['pickup', 'picksup', 'grab', 'take', 'get'].includes(action)) { // pick up object
         // console.log('pickup', action, object, target);
 
         let finalTarget = object === 'none' ? target : object;
