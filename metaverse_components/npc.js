@@ -156,135 +156,155 @@ try {
     // ----------------------------------------- ConvAI Mods --------------------------------------------------------------------
     // Re implemented the action code to the best of our understanding. Need mre clarification on the implementation
 
+    // Helper function for parsing response with multiple actions and emotions
+    const parse = (data) => {
+      var c = []
+      data.substring(1, data.length-1).match(/'(.*?)'/g)
+      .map((word) => {c.push(word.trim().substring(1, word.length-1))})
+      return c
+    }
+
     character.addEventListener('say', e => {
 
       // console.log("World log: ", metaversefileApi.useWorld().getApps());
       var apps = metaversefileApi.useWorld().getApps();
 
       console.log('got character say', e.data);
-      const {message, emote, action, object, target} = e.data;
+      const {message, emote: emoteArrayString, action: actionArrayString, object: objectArrayString, target: targetArrayString} = e.data;
+      
+      const emote = parse(emoteArrayString)
+      const action = parse(actionArrayString)
+      const object = parse(objectArrayString)
+      const target = parse(targetArrayString)
+      
       chatManager.addPlayerMessage(npcPlayer, message);
-      if (emote === 'supersaiyan' || action === 'supersaiyan' || /supersaiyan/i.test(object) || /supersaiyan/i.test(target)) {
-        const newSssAction = {
-          type: 'sss',
-        };
-        npcPlayer.addAction(newSssAction);
+      console.log("Actions: ",action);
+
+      // Loop over all the emotions and actions supplied from the response
+      for (var i=0;i<action.length;i++){
+        if (emote[i] === 'supersaiyan' || action[i] === 'supersaiyan' || /supersaiyan/i.test(object[i]) || /supersaiyan/i.test(target[i])) {
+          const newSssAction = {
+            type: 'sss',
+          };
+          npcPlayer.addAction(newSssAction);
+        }
+  
+        // This else-if section is hardcoded for testing
+        // else if(action === 'none'){
+        //   let objectApp = null
+        //   for(var i =0;i<apps.length;i++){
+        //     // console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
+        //     // console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // Drake - DRAKE
+        //     if (apps[i].name.replace(" ", "").toUpperCase().includes("pistol".replace(" ", "").toUpperCase())){
+        //       objectApp = apps[i];
+        //       break;
+        //     }
+        //   }
+  
+        //   targetSpec = {
+        //     type: 'grab',
+        //     object: objectApp,
+        //   };
+        // }
+  
+        // Assuming we always follow the localPlayer for now
+        else if ((action[i] === 'follow' || action[i] === 'follows') || (object[i] === 'none' && target[i] === localPlayer.name)) { // follow player
+          targetSpec = {
+            type: 'follow',
+            object: localPlayer,
+          };
+        }
+  
+        else if (action[i] === 'stop') { // stop
+          targetSpec = null;
+        } 
+        
+        // Moveto either an object or a target
+        else if ((action[i] === 'moveto' || action[i] === 'movesto') && (object[i] !== 'none' && target[i] === 'none')) { // move to object
+          console.log('move to object', object[i]);
+          /* target = localPlayer;
+          targetType = 'follow'; */
+  
+          let objectApp = null
+          for(var j =0;j<apps.length;j++){
+  
+            // Shortcut for easier access to app
+            // console.log("Apps-i: ", apps[i].name.toUpperCase()) // [drake_hacker_v1_vian - DRAKE_HACKER_V1_VIAN ]
+            // console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // [Drake - DRAKE         ]
+            if (apps[j].name.replace(" ", "").toUpperCase().includes(object[i].replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
+              objectApp = apps[j];
+              break;
+            }
+          }
+  
+          targetSpec = {
+            type: 'moveto',
+            object: objectApp,
+          };
+  
+        } else if ((action[i] === 'moveto' || action[i] === 'movesto') && (object[i] === 'none' && target[i] !== 'none')) { // move to player
+          // console.log('move to', object);
+          let objectApp = null
+          for(var j =0;j<apps.length;j++){
+            if (apps[j].name.replace(" ", "").toUpperCase().includes(target[i].replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
+              objectApp = apps[j];
+              break;
+            }
+          }
+  
+          targetSpec = {
+            type: 'moveto',
+            // object: localPlayer,
+            object: objectApp,
+          };
+        } 
+        
+        // NPC can pickup an object / target [Ambiguously defined]
+        else if (['pickup', 'picksup', 'grab', 'take', 'get'].includes(action[i])) { // pick up object
+          console.log('pickup', object[i], target[i]);
+  
+          let finalTarget = object[i] === 'none' ? target[i] : object[i];
+          let objectApp = null
+          for(var j =0;j<apps.length;j++){
+            if (apps[j].name.replace(" ", "").toUpperCase().includes(finalTarget.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
+              objectApp = apps[j];
+              // Adding that to the lsit of apps related to the npc
+              npcApps.push(apps[j]);
+              break;
+            }
+          }
+  
+          targetSpec = {
+            type: 'grab',
+            object: objectApp,
+          };
+        }
+  
+        // NPC can drop an object / target [Ambiguously defined]
+        else if (['drop', 'drops'].includes(action[i])) { // pick up object
+          // console.log('pickup', action, object, target);
+          let finalTarget = object[i] === 'none' ? target[i] : object[i];
+          let objectApp = null
+          for(var j =0;j<npcApps.length;j++){
+            if (npcApps[j].name.replace(" ", "").toUpperCase().includes(finalTarget.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
+              objectApp = npcApps[j];
+              console.log("ObjectApp: ", objectApp);
+              break;
+            }
+          }
+  
+          targetSpec = {
+            type: 'drop',
+            object: objectApp,
+          };
+        }
+  
+        // yet to be implementated
+        else if (['use', 'activate'].includes(action[i])) { // use object
+          console.log('use', action[i], object[i], target[i]);
+        }
       }
-
-      // This else-if section is hardcoded for testing
-      // else if(action === 'none'){
-      //   let objectApp = null
-      //   for(var i =0;i<apps.length;i++){
-      //     // console.log("Apps-i: ", apps[i].name.toUpperCase()) // drake_hacker_v1_vian - 
-      //     // console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // Drake - DRAKE
-      //     if (apps[i].name.replace(" ", "").toUpperCase().includes("pistol".replace(" ", "").toUpperCase())){
-      //       objectApp = apps[i];
-      //       break;
-      //     }
-      //   }
-
-      //   targetSpec = {
-      //     type: 'grab',
-      //     object: objectApp,
-      //   };
-      // }
-
-      // Assuming we always follow the localPlayer for now
-      else if ((action === 'follow' || action === 'follows') || (object === 'none' && target === localPlayer.name)) { // follow player
-        targetSpec = {
-          type: 'follow',
-          object: localPlayer,
-        };
-      }
-
-      else if (action === 'stop') { // stop
-        targetSpec = null;
-      } 
       
-      // Moveto either an object or a target
-      else if ((action === 'moveto' || action === 'movesto') && (object !== 'none' && target === 'none')) { // move to object
-        console.log('move to object', object);
-        /* target = localPlayer;
-        targetType = 'follow'; */
-
-        let objectApp = null
-        for(var i =0;i<apps.length;i++){
-
-          // Shortcut for easier access to app
-          // console.log("Apps-i: ", apps[i].name.toUpperCase()) // [drake_hacker_v1_vian - DRAKE_HACKER_V1_VIAN ]
-          // console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // [Drake - DRAKE         ]
-          if (apps[i].name.replace(" ", "").toUpperCase().includes(object.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
-            objectApp = apps[i];
-            break;
-          }
-        }
-
-        targetSpec = {
-          type: 'moveto',
-          object: objectApp,
-        };
-
-      } else if ((action === 'moveto' || action === 'movesto') && (object === 'none' && target !== 'none')) { // move to player
-        // console.log('move to', object);
-        let objectApp = null
-        for(var i =0;i<apps.length;i++){
-          if (apps[i].name.replace(" ", "").toUpperCase().includes(target.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
-            objectApp = apps[i];
-            break;
-          }
-        }
-
-        targetSpec = {
-          type: 'moveto',
-          // object: localPlayer,
-          object: objectApp,
-        };
-      } 
-      
-      // NPC can pickup an object / target [Ambiguously defined]
-      else if (['pickup', 'picksup', 'grab', 'take', 'get'].includes(action)) { // pick up object
-        console.log('pickup', object, target);
-
-        let finalTarget = object === 'none' ? target : object;
-        let objectApp = null
-        for(var i =0;i<apps.length;i++){
-          if (apps[i].name.replace(" ", "").toUpperCase().includes(finalTarget.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
-            objectApp = apps[i];
-            // Adding that to the lsit of apps related to the npc
-            npcApps.push(apps[i]);
-            break;
-          }
-        }
-
-        targetSpec = {
-          type: 'grab',
-          object: objectApp,
-        };
-      }
-
-      // NPC can drop an object / target [Ambiguously defined]
-      else if (['drop', 'drops'].includes(action)) { // pick up object
-        // console.log('pickup', action, object, target);
-        let finalTarget = object === 'none' ? target : object;
-        let objectApp = null
-        for(var i =0;i<npcApps.length;i++){
-          if (npcApps[i].name.replace(" ", "").toUpperCase().includes(finalTarget.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
-            objectApp = npcApps[i];
-            console.log("ObjectApp: ", objectApp);
-            break;
-          }
-        }
-
-        targetSpec = {
-          type: 'drop',
-          object: objectApp,
-        };
-      }
-
-      // yet to be implementated
-      else if (['use', 'activate'].includes(action)) { // use object
-        console.log('use', action, object, target);
-      }
     });
 
     // ------------------------------------------------------------------------------------------------------------------------------------------
