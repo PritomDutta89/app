@@ -243,7 +243,7 @@ try {
       
       // NPC can pickup an object / target [Ambiguously defined]
       else if (['pickup', 'picksup', 'grab', 'take', 'get'].includes(action)) { // pick up object
-        // console.log('pickup', action, object, target);
+        console.log('pickup', object, target);
 
         let finalTarget = object === 'none' ? target : object;
         let objectApp = null
