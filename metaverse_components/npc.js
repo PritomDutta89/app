@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import metaversefile from 'metaversefile';
 import metaversefileApi from '../metaversefile-api';
+import { objectMapping } from './object-mapping'; 
 
 const localVector = new THREE.Vector3();
 
@@ -227,11 +228,8 @@ try {
   
           let objectApp = null
           for(var j =0;j<apps.length;j++){
-  
-            // Shortcut for easier access to app
-            // console.log("Apps-i: ", apps[i].name.toUpperCase()) // [drake_hacker_v1_vian - DRAKE_HACKER_V1_VIAN ]
-            // console.log("Object: ", object.split("/")[1].split("#")[0].toUpperCase()) // [Drake - DRAKE         ]
-            if (apps[j].name.replace(" ", "").toUpperCase().includes(object[i].replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
+            
+            if (apps[j].name === objectMapping[object[i].replace(" ", "").split("/")[1].split("#")[0]]){
               objectApp = apps[j];
               break;
             }
@@ -243,14 +241,21 @@ try {
           };
   
         } else if ((action[i] === 'moveto' || action[i] === 'movesto') && (object[i] === 'none' && target[i] !== 'none')) { // move to player
-          // console.log('move to', object);
           let objectApp = null
-          for(var j =0;j<apps.length;j++){
-            if (apps[j].name.replace(" ", "").toUpperCase().includes(target[i].replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
-              objectApp = apps[j];
-              break;
+          // console.log('move to', target[i]);
+          if (localPlayer.name.replace(" ", "").toUpperCase().includes(target[i].replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
+            objectApp = localPlayer;
+          }else{
+            
+            for(var j =0;j<apps.length;j++){
+              // console.log("App: ", apps[j])
+              if (apps[j].name === objectMapping[target[i].replace(" ", "").split("/")[1].split("#")[0]]){
+                objectApp = apps[j];
+                break;
+              }
             }
           }
+          // console.log('move to', objectApp.name);
   
           targetSpec = {
             type: 'moveto',
@@ -266,7 +271,7 @@ try {
           let finalTarget = object[i] === 'none' ? target[i] : object[i];
           let objectApp = null
           for(var j =0;j<apps.length;j++){
-            if (apps[j].name.replace(" ", "").toUpperCase().includes(finalTarget.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
+            if (apps[j].name === objectMapping[finalTarget.replace(" ", "").split("/")[1].split("#")[0]]){
               objectApp = apps[j];
               // Adding that to the lsit of apps related to the npc
               npcApps.push(apps[j]);
@@ -286,7 +291,7 @@ try {
           let finalTarget = object[i] === 'none' ? target[i] : object[i];
           let objectApp = null
           for(var j =0;j<npcApps.length;j++){
-            if (npcApps[j].name.replace(" ", "").toUpperCase().includes(finalTarget.replace(" ", "").split("/")[1].split("#")[0].toUpperCase())){
+            if (npcApps[j].name === objectMapping[finalTarget.replace(" ", "").split("/")[1].split("#")[0]]){
               objectApp = npcApps[j];
               console.log("ObjectApp: ", objectApp);
               break;

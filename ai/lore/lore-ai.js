@@ -189,7 +189,7 @@ class AIScene {
       characters: this.characters,
       messages: this.messages,
       objects: this.objects,
-      dstCharacter: null,
+      dstCharacter,
     });
     const stop = makeLoreStop(this.localCharacter, 0);
     let response = await this.generateFn(prompt, stop);
